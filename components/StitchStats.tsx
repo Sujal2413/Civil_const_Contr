@@ -2,6 +2,9 @@
 
 import React, { useEffect, useRef } from "react";
 import { useInView, motion, useSpring, useTransform } from "framer-motion";
+import dynamic from "next/dynamic";
+
+const Stats3DBackground = dynamic(() => import("./Stats3DBackground"), { ssr: false });
 
 function Counter({ value, prefix = "", suffix = "" }: { value: number, prefix?: string, suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -26,10 +29,12 @@ function Counter({ value, prefix = "", suffix = "" }: { value: number, prefix?: 
 
 export default function StitchStats() {
   return (
-    <section className="py-20 bg-[#1d100c] px-5 md:px-10 lg:px-20 text-center">
-      <span className="font-['JetBrains_Mono'] text-[12px] text-[#a98a80] uppercase tracking-[0.2em] block mb-12">
-        Key Performance Indicators
-      </span>
+    <section className="relative py-20 bg-[#1d100c] px-5 md:px-10 lg:px-20 text-center overflow-hidden">
+      <Stats3DBackground />
+      <div className="relative z-10">
+        <span className="font-['JetBrains_Mono'] text-[12px] text-[#a98a80] uppercase tracking-[0.2em] block mb-12">
+          Key Performance Indicators
+        </span>
       <div className="space-y-16">
         <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -66,6 +71,7 @@ export default function StitchStats() {
           </div>
           <div className="font-['JetBrains_Mono'] text-[12px] text-[#e1bfb4] tracking-[0.05em]">CLIENT SATISFACTION RATE</div>
         </motion.div>
+      </div>
       </div>
     </section>
   );

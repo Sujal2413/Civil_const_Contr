@@ -40,7 +40,7 @@ export default function StitchHero() {
     const y = useTransform(scrollY, [0, 1000], [0, 200]);
 
     return (
-        <section className="relative h-screen min-h-[600px] flex flex-col justify-end pb-12 px-5 md:px-10 lg:px-20 overflow-hidden bg-[#1d100c]">
+        <section className="relative w-full aspect-video min-h-[600px] flex flex-col justify-end pb-12 px-5 md:px-10 lg:px-20 overflow-hidden bg-[#1d100c]">
             <motion.div style={{ y }} className="absolute inset-0 z-0 overflow-hidden">
                 <video 
                     autoPlay
@@ -48,7 +48,7 @@ export default function StitchHero() {
                     muted
                     playsInline
                     className="w-full h-full object-cover absolute top-0 left-0" 
-                    src="/hero-video-lossless.mp4?v=1" 
+                    src="/hero-video-sunset-delogo.mp4?v=1" 
                 />
             </motion.div>
 

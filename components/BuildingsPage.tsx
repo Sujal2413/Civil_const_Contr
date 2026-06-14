@@ -33,6 +33,10 @@ const ServiceWireframe = dynamic(() => import("./ServiceWireframe"), {
   loading: () => <div className="wireframe-loading" />
 });
 
+const Projects3DBackground = dynamic(() => import("./Projects3DBackground"), {
+  ssr: false
+});
+
 type BuildingsPageProps = {
   content: HomeContent;
 };
@@ -336,8 +340,9 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
 
       <StitchMarquee />
 
-      <section className="section projects-section" id="projects">
-        <div className="container">
+      <section className="section projects-section relative" id="projects">
+        <Projects3DBackground />
+        <div className="container relative z-10">
           <div className="section-heading reveal">
             <h2>Projects built with care and precision.</h2>
             <a className="text-link" href="#blog">
