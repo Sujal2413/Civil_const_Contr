@@ -7,7 +7,8 @@ import {
   type MouseEvent as ReactMouseEvent,
   useEffect,
   useMemo,
-  useState
+  useState,
+  useRef
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
@@ -21,6 +22,11 @@ import {
   X
 } from "lucide-react";
 import type { HomeContent } from "@/lib/content";
+
+import StitchHero from "./StitchHero";
+import StitchMarquee from "./StitchMarquee";
+import StitchStats from "./StitchStats";
+import HoverFooter from "./HoverFooterDemo";
 
 const ServiceWireframe = dynamic(() => import("./ServiceWireframe"), {
   ssr: false,
@@ -49,9 +55,10 @@ function moveMagneticButton(event: ReactMouseEvent<HTMLAnchorElement>) {
   const x = event.clientX - rect.left - rect.width / 2;
   const y = event.clientY - rect.top - rect.height / 2;
 
+  // 30px proximity is handled by a parent listener, here we just do the intense hover effect
   target.style.setProperty("--mx", `${event.clientX - rect.left}px`);
   target.style.setProperty("--my", `${event.clientY - rect.top}px`);
-  target.style.transform = `translate3d(${x * 0.08}px, ${y * 0.18}px, 0)`;
+  target.style.transform = `translate3d(${x * 0.15}px, ${y * 0.3}px, 0)`;
 }
 
 function resetMagneticButton(event: ReactMouseEvent<HTMLAnchorElement>) {
@@ -63,6 +70,9 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeService, setActiveService] = useState<number | null>(null);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [heroReady, setHeroReady] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
+  const ctaRef = useRef<HTMLAnchorElement>(null);
 
   const tickerItems = useMemo(
     () => [...content.tickerStats, ...content.tickerStats, ...content.tickerStats],
@@ -80,7 +90,10 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(
+      // Reveal timeline (waits for loader)
+      const revealTl = gsap.timeline({ paused: true });
+      
+      revealTl.fromTo(
         ".hero-letter",
         { yPercent: 115, opacity: 0 },
         {
@@ -89,11 +102,8 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
           duration: 0.74,
           ease: "power4.out",
           stagger: 0.018,
-          delay: 0.2
         }
-      );
-
-      gsap.fromTo(
+      ).fromTo(
         ".hero-support",
         { opacity: 0, y: 26 },
         {
@@ -102,9 +112,21 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
           duration: 0.8,
           ease: "power3.out",
           stagger: 0.14,
-          delay: 0.58
-        }
+        },
+        "-=0.4"
+      ).fromTo(
+        ".scroll-indicator",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5 },
+        "-=0.2"
       );
+
+      if (heroReady) {
+        // Add a slight delay to let the loader exit finish
+        setTimeout(() => revealTl.play(), 800);
+      }
+
+
 
       gsap.utils.toArray<HTMLElement>(".reveal").forEach((element) => {
         gsap.fromTo(
@@ -122,6 +144,40 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
           }
         );
       });
+
+      // Cinematic Marquee Scroll-Coupling
+      const tickerTrack = document.querySelector(".ticker-track");
+      if (tickerTrack) {
+        let direction = 1; // 1 = forward, -1 = reverse
+        ScrollTrigger.create({
+          trigger: document.body,
+          start: "top top",
+          end: "bottom bottom",
+          onUpdate: (self) => {
+            // Reverse direction on scroll up
+            if (self.direction !== direction) {
+              direction = self.direction;
+              gsap.to(tickerTrack, {
+                animationDirection: direction === 1 ? "normal" : "reverse",
+                duration: 0.5,
+              });
+            }
+            // Speed up on scroll
+            gsap.to(tickerTrack, {
+              animationDuration: `${24 - Math.abs(self.getVelocity()) * 0.005}s`,
+              duration: 0.2,
+              overwrite: "auto"
+            });
+            // Return to normal speed when scroll stops
+            gsap.to(tickerTrack, {
+              animationDuration: "24s",
+              duration: 1,
+              delay: 0.2,
+              overwrite: "auto"
+            });
+          }
+        });
+      }
 
       gsap.utils.toArray<HTMLElement>("[data-count]").forEach((counter) => {
         const target = Number(counter.dataset.target ?? "0");
@@ -175,6 +231,42 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
     });
 
     return () => ctx.revert();
+  }, [heroReady]);
+
+  // Handle global mouse move for gradient text and CTA proximity
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (heroRef.current) {
+        // Gradient text position
+        const x = (e.clientX / window.innerWidth) * 100;
+        const y = (e.clientY / window.innerHeight) * 100;
+        heroRef.current.style.setProperty("--mouse-x", `${x}%`);
+        heroRef.current.style.setProperty("--mouse-y", `${y}%`);
+      }
+
+      // Proximity pull for CTA
+      if (ctaRef.current) {
+        const rect = ctaRef.current.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const distanceX = e.clientX - centerX;
+        const distanceY = e.clientY - centerY;
+        const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+        
+        // 150px detection radius for the pull
+        if (distance < 150 && distance > rect.width / 2) {
+          const pull = 1 - (distance / 150); // 0 to 1
+          const pullX = distanceX * 0.1 * pull;
+          const pullY = distanceY * 0.1 * pull;
+          ctaRef.current.style.transform = `translate3d(${pullX}px, ${pullY}px, 0)`;
+        } else if (distance >= 150) {
+           ctaRef.current.style.transform = "translate3d(0, 0, 0)";
+        }
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    return () => window.removeEventListener("pointermove", handlePointerMove);
   }, []);
 
   function showPreviousTestimonial() {
@@ -240,36 +332,9 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
         ) : null}
       </AnimatePresence>
 
-      <section className="hero" id="top">
-        <div className="hero-photo" aria-hidden="true" />
-        <div className="hero-vignette" aria-hidden="true" />
-        <div className="container hero-content">
-          <h1 aria-label={content.hero.title}>{splitHeadline(content.hero.title)}</h1>
-          <div className="hero-lower">
-            <p className="hero-support">{content.hero.body}</p>
-            <a
-              className="magnetic-button hero-support"
-              href="#contact"
-              onMouseMove={moveMagneticButton}
-              onMouseLeave={resetMagneticButton}
-            >
-              {content.hero.cta}
-              <ArrowUpRight size={18} strokeWidth={1.9} />
-            </a>
-          </div>
-        </div>
-      </section>
+      <StitchHero />
 
-      <section className="stat-ticker" aria-label="Company stats">
-        <div className="ticker-track">
-          {tickerItems.map((item, index) => (
-            <div className="ticker-item" key={`${item.value}-${item.label}-${index}`}>
-              <strong>{item.value}</strong>
-              <span>{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <StitchMarquee />
 
       <section className="section projects-section" id="projects">
         <div className="container">
@@ -310,33 +375,7 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
         </div>
       </section>
 
-      <section className="section proof-section" aria-labelledby="proof-title">
-        <div className="container proof-grid">
-          <div className="proof-title reveal">
-            <h2 id="proof-title">Did you know?</h2>
-            <p>
-              Three practical signals behind a construction partner built for
-              demanding commercial, industrial, and residential work.
-            </p>
-          </div>
-          <div className="proof-cards">
-            {content.proofStats.map((stat) => (
-              <article className="proof-card reveal" key={stat.label}>
-                <strong
-                  data-count
-                  data-target={stat.target}
-                  data-prefix={stat.prefix ?? ""}
-                  data-suffix={stat.suffix}
-                >
-                  {stat.prefix ?? ""}
-                  0{stat.suffix}
-                </strong>
-                <span>{stat.label}</span>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+      <StitchStats />
 
       <section className="section strengths-section" id="about">
         <div className="container strengths-layout">
@@ -493,57 +532,7 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
         </div>
       </section>
 
-      <footer className="site-footer">
-        <div className="footer-skyline" aria-hidden="true">
-          {Array.from({ length: 18 }).map((_, index) => (
-            <span key={index} style={{ "--h": `${42 + ((index * 31) % 92)}px` } as CSSProperties} />
-          ))}
-        </div>
-        <div className="container footer-grid">
-          <div>
-            <a className="brand footer-brand" href="#top" aria-label="Buildings home">
-              <span className="brand-symbol" aria-hidden="true">
-                <span />
-                <span />
-              </span>
-              <span className="brand-text">Buildings</span>
-            </a>
-            <p>{content.footer.summary}</p>
-          </div>
-          <div>
-            <h3>Address</h3>
-            <p>{content.footer.address}</p>
-          </div>
-          <div>
-            <h3>Contact</h3>
-            <p>
-              {content.footer.contact.phone}
-              <br />
-              {content.footer.contact.email}
-            </p>
-          </div>
-          <div>
-            <h3>Navigation</h3>
-            {content.navigation.slice(0, 4).map((item) => (
-              <a key={item.href} href={item.href}>
-                {item.label}
-              </a>
-            ))}
-          </div>
-          <div>
-            <h3>Social</h3>
-            {content.footer.social.map((item) => (
-              <a key={item} href="#top">
-                {item}
-              </a>
-            ))}
-          </div>
-        </div>
-        <div className="container footer-legal">
-          <span>Created by dianadia © 2026</span>
-          <span>Built in Framer spirit, rebuilt in Next.js</span>
-        </div>
-      </footer>
+      <HoverFooter />
     </main>
   );
 }

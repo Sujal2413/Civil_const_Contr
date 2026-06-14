@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 type HeroTimelapseSceneProps = {
@@ -80,6 +80,7 @@ function TimelapsePhotoPlane({ rippleActive }: HeroTimelapseSceneProps) {
   );
   const { size, viewport } = useThree();
   const ripple = useRef(0);
+  const elapsed = useRef(0);
 
   useEffect(() => {
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -90,9 +91,10 @@ function TimelapsePhotoPlane({ rippleActive }: HeroTimelapseSceneProps) {
     material.uniforms.uTexture.value = texture;
   }, [material, texture]);
 
-  useFrame(({ clock }, delta) => {
+  useFrame((_, delta) => {
+    elapsed.current += delta;
     ripple.current = THREE.MathUtils.damp(ripple.current, rippleActive ? 1 : 0, 6, delta);
-    material.uniforms.uTime.value = clock.elapsedTime;
+    material.uniforms.uTime.value = elapsed.current;
     material.uniforms.uRipple.value = ripple.current;
     material.uniforms.uViewportAspect.value = size.width / size.height;
   });
