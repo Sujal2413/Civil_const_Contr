@@ -1,0 +1,137 @@
+[debug] [2026-06-13T15:33:45.224Z] ----------------------------------------------------------------------
+[debug] [2026-06-13T15:33:45.225Z] Command:       /opt/homebrew/Cellar/node@20/20.20.0/bin/node /Users/apple/.npm/_npx/ba4f1959e38407b5/node_modules/.bin/firebase emulators:start --only apphosting
+[debug] [2026-06-13T15:33:45.225Z] CLI Version:   15.20.0
+[debug] [2026-06-13T15:33:45.225Z] Platform:      darwin
+[debug] [2026-06-13T15:33:45.225Z] Node Version:  v20.20.0
+[debug] [2026-06-13T15:33:45.225Z] Time:          Sat Jun 13 2026 21:03:45 GMT+0530 (India Standard Time)
+[debug] [2026-06-13T15:33:45.225Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-06-13T15:33:45.226Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-06-13T15:33:45.746Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] Failed to authenticate, have you run firebase login?
+[warn] ⚠  emulators: You are not currently authenticated so some features may not work correctly. Please run firebase login to authenticate the CLI. 
+[info] i  emulators: Starting emulators: apphosting {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: apphosting"}}
+[info] i  emulators: Detected demo project ID "demo-no-project", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail. {"metadata":{"emulator":{"name":"hub"},"message":"Detected demo project ID \"demo-no-project\", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail."}}
+[debug] [2026-06-13T15:33:45.872Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-06-13T15:33:45.872Z] [apphosting] App Hosting Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-06-13T15:33:45.873Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"apphosting":[{"address":"127.0.0.1","family":"IPv4","port":5002}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2026-06-13T15:33:45.874Z] Write emulator hub locator at /var/folders/kb/kyb5lk353m38l48pqkrg635h0000gn/T/hub-demo-no-project.json
+[info] i  apphosting: starting app with: 'npm run dev' {"metadata":{"emulator":{"name":"apphosting"},"message":"starting app with: 'npm run dev'"}}
+[debug] [2026-06-13T15:33:46.529Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-06-13T15:33:46.529Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[warn] ⚠  Unable to fetch the CLI MOTD and remote config. This is not a fatal error, but may indicate an issue with your network connection. 
+[debug] [2026-06-13T15:33:46.529Z] Failed to fetch MOTD Error: EACCES: permission denied, mkdir '/Users/apple/.config/configstore'
+You don't have access to this file.
+
+[warn] ⚠  emulators: The Emulator UI is not starting because none of the running emulators have a UI component. {"metadata":{"emulator":{"name":"hub"},"message":"The Emulator UI is not starting because none of the running emulators have a UI component."}}
+[info] i  apphosting: connecting apphosting emulator {"metadata":{"emulator":{"name":"apphosting"},"message":"connecting apphosting emulator"}}
+[debug] [2026-06-13T15:33:46.859Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase SQL Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────┬────────────────┐
+│ Emulator    │ Host:Port      │
+├─────────────┼────────────────┤
+│ App Hosting │ localhost:5002 │
+└─────────────┴────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[error] ⬢  apphosting: failed to start Dev Server: Error: Error: spawn(npm run dev) 
+ exited with code: 1 {"metadata":{"emulator":{"name":"apphosting"},"message":"failed to start Dev Server: Error: Error: spawn(npm run dev) \n exited with code: 1"}}
+[info] i  apphosting: Dev Server stopped {"metadata":{"emulator":{"name":"apphosting"},"message":"Dev Server stopped"}}
+[debug] [2026-06-13T15:34:40.591Z] ----------------------------------------------------------------------
+[debug] [2026-06-13T15:34:40.593Z] Command:       /opt/homebrew/Cellar/node@20/20.20.0/bin/node /Users/apple/.npm/_npx/ba4f1959e38407b5/node_modules/.bin/firebase emulators:start --only apphosting
+[debug] [2026-06-13T15:34:40.593Z] CLI Version:   15.20.0
+[debug] [2026-06-13T15:34:40.593Z] Platform:      darwin
+[debug] [2026-06-13T15:34:40.593Z] Node Version:  v20.20.0
+[debug] [2026-06-13T15:34:40.593Z] Time:          Sat Jun 13 2026 21:04:40 GMT+0530 (India Standard Time)
+[debug] [2026-06-13T15:34:40.593Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-06-13T15:34:40.594Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-06-13T15:34:41.150Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] Failed to authenticate, have you run firebase login?
+[warn] ⚠  emulators: You are not currently authenticated so some features may not work correctly. Please run firebase login to authenticate the CLI. 
+[info] i  emulators: Starting emulators: apphosting {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: apphosting"}}
+[info] i  emulators: Detected demo project ID "demo-no-project", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail. {"metadata":{"emulator":{"name":"hub"},"message":"Detected demo project ID \"demo-no-project\", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail."}}
+[debug] [2026-06-13T15:34:41.255Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-06-13T15:34:41.255Z] [apphosting] App Hosting Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-06-13T15:34:41.255Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"apphosting":[{"address":"127.0.0.1","family":"IPv4","port":5002}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2026-06-13T15:34:41.257Z] Found emulator hub locator: {"version":"15.20.0","origins":["http://127.0.0.1:4400","http://[::1]:4400"],"pid":29031}
+[debug] [2026-06-13T15:34:41.257Z] Write emulator hub locator at /var/folders/kb/kyb5lk353m38l48pqkrg635h0000gn/T/hub-demo-no-project.json
+[info] i  apphosting: starting app with: 'npm run dev' {"metadata":{"emulator":{"name":"apphosting"},"message":"starting app with: 'npm run dev'"}}
+[warn] ⚠  emulators: The Emulator UI is not starting because none of the running emulators have a UI component. {"metadata":{"emulator":{"name":"hub"},"message":"The Emulator UI is not starting because none of the running emulators have a UI component."}}
+[info] i  apphosting: connecting apphosting emulator {"metadata":{"emulator":{"name":"apphosting"},"message":"connecting apphosting emulator"}}
+[debug] [2026-06-13T15:34:41.901Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase SQL Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────┬────────────────┐
+│ Emulator    │ Host:Port      │
+├─────────────┼────────────────┤
+│ App Hosting │ localhost:5002 │
+└─────────────┴────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[debug] [2026-06-13T15:34:41.995Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-06-13T15:34:41.995Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[warn] ⚠  Unable to fetch the CLI MOTD and remote config. This is not a fatal error, but may indicate an issue with your network connection. 
+[debug] [2026-06-13T15:34:41.995Z] Failed to fetch MOTD Error: EACCES: permission denied, mkdir '/Users/apple/.config/configstore'
+You don't have access to this file.
+
+[error] ⬢  apphosting: failed to start Dev Server: Error: Error: spawn(npm run dev) 
+ exited with code: 1 {"metadata":{"emulator":{"name":"apphosting"},"message":"failed to start Dev Server: Error: Error: spawn(npm run dev) \n exited with code: 1"}}
+[info] i  apphosting: Dev Server stopped {"metadata":{"emulator":{"name":"apphosting"},"message":"Dev Server stopped"}}
+[debug] [2026-06-13T15:36:08.030Z] ----------------------------------------------------------------------
+[debug] [2026-06-13T15:36:08.032Z] Command:       /opt/homebrew/Cellar/node@20/20.20.0/bin/node /Users/apple/.npm/_npx/ba4f1959e38407b5/node_modules/.bin/firebase emulators:start --only apphosting
+[debug] [2026-06-13T15:36:08.032Z] CLI Version:   15.20.0
+[debug] [2026-06-13T15:36:08.033Z] Platform:      darwin
+[debug] [2026-06-13T15:36:08.033Z] Node Version:  v20.20.0
+[debug] [2026-06-13T15:36:08.033Z] Time:          Sat Jun 13 2026 21:06:08 GMT+0530 (India Standard Time)
+[debug] [2026-06-13T15:36:08.033Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-06-13T15:36:08.034Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-06-13T15:36:08.719Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] Failed to authenticate, have you run firebase login?
+[warn] ⚠  emulators: You are not currently authenticated so some features may not work correctly. Please run firebase login to authenticate the CLI. 
+[info] i  emulators: Starting emulators: apphosting {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: apphosting"}}
+[info] i  emulators: Detected demo project ID "demo-no-project", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail. {"metadata":{"emulator":{"name":"hub"},"message":"Detected demo project ID \"demo-no-project\", emulated services will use a demo configuration and attempts to access non-emulated services for this project will fail."}}
+[debug] [2026-06-13T15:36:08.842Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-06-13T15:36:08.843Z] [apphosting] App Hosting Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-06-13T15:36:08.843Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"apphosting":[{"address":"127.0.0.1","family":"IPv4","port":5002}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2026-06-13T15:36:08.845Z] Found emulator hub locator: {"version":"15.20.0","origins":["http://127.0.0.1:4400","http://[::1]:4400"],"pid":30249}
+[debug] [2026-06-13T15:36:08.845Z] Write emulator hub locator at /var/folders/kb/kyb5lk353m38l48pqkrg635h0000gn/T/hub-demo-no-project.json
+[info] i  apphosting: starting app with: 'npm run dev' {"metadata":{"emulator":{"name":"apphosting"},"message":"starting app with: 'npm run dev'"}}
+[debug] [2026-06-13T15:36:09.494Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-06-13T15:36:09.494Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[warn] ⚠  Unable to fetch the CLI MOTD and remote config. This is not a fatal error, but may indicate an issue with your network connection. 
+[debug] [2026-06-13T15:36:09.494Z] Failed to fetch MOTD Error: EACCES: permission denied, mkdir '/Users/apple/.config/configstore'
+You don't have access to this file.
+
+[warn] ⚠  emulators: The Emulator UI is not starting because none of the running emulators have a UI component. {"metadata":{"emulator":{"name":"hub"},"message":"The Emulator UI is not starting because none of the running emulators have a UI component."}}
+[info] i  apphosting: connecting apphosting emulator {"metadata":{"emulator":{"name":"apphosting"},"message":"connecting apphosting emulator"}}
+[debug] [2026-06-13T15:36:09.827Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase SQL Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────┬────────────────┐
+│ Emulator    │ Host:Port      │
+├─────────────┼────────────────┤
+│ App Hosting │ localhost:5002 │
+└─────────────┴────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
