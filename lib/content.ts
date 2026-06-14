@@ -124,22 +124,22 @@ export const homeContent: HomeContent = {
   ],
   proofStats: [
     {
-      target: 50,
-      value: "50+",
-      label: "Trusted Partners",
-      suffix: "+"
+      target: 18,
+      value: "18",
+      label: "Trusted partners",
+      suffix: ""
     },
     {
-      target: 20,
-      value: "£20M+",
-      label: "Projects Delivered",
+      target: 8,
+      value: "£8M",
+      label: "Projects delivered",
       prefix: "£",
-      suffix: "M+"
+      suffix: "M"
     },
     {
-      target: 98,
-      value: "98%",
-      label: "Client Satisfaction Rate",
+      target: 94,
+      value: "94%",
+      label: "Client satisfaction",
       suffix: "%"
     }
   ],

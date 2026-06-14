@@ -6,3 +6,7 @@ dist
 .env
 .env*.local
 docs/qa-*.png
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+apphosting.emulator.yaml
