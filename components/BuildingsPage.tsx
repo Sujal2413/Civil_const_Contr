@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import Link from "next/link";
 import {
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
@@ -9,18 +10,8 @@ import {
   useMemo,
   useRef,
   useState,
-  Fragment
 } from "react";
-import {
-  AnimatePresence,
-  animate,
-  motion,
-  useInView,
-  useMotionValue,
-  useMotionValueEvent,
-  useSpring,
-  useTransform
-} from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
@@ -28,18 +19,33 @@ import {
   ArrowRight,
   ArrowUpRight,
   Check,
-  ChevronRight
 } from "lucide-react";
-import type { HomeContent, ProofStat, Project, Service } from "@/lib/content";
-import { AnimatedHero } from "@/components/ui/animated-hero-section-1";
-import { CinematicFooter } from "@/components/ui/motion-footer";
-import { LogoAllReno, LogoCareer, LogoChema, LogoEnergyMax, LogoGretta, LogoInsure } from "@/components/ui/logos";
+import type { HomeContent } from "@/lib/content";
 
+import CinematicHeroCanvas from "./CinematicHeroCanvas";
+import HeroLoader from "./HeroLoader";
+import ScrollIndicator from "./ScrollIndicator";
 
+const ServiceWireframe = dynamic(() => import("./ServiceWireframe"), {
+  ssr: false,
+  loading: () => <div className="wireframe-loading" />,
+});
 
 type BuildingsPageProps = {
   content: HomeContent;
 };
+
+function splitHeadline(headline: string) {
+  return headline.split(" ").map((word, wordIndex) => (
+    <span className="hero-word" key={`${word}-${wordIndex}`}>
+      {Array.from(word).map((letter, letterIndex) => (
+        <span className="hero-letter-mask" key={`${letter}-${letterIndex}`}>
+          <span className="hero-letter">{letter}</span>
+        </span>
+      ))}
+    </span>
+  ));
+}
 
 function moveMagneticButton(event: ReactMouseEvent<HTMLAnchorElement>) {
   const target = event.currentTarget;
@@ -49,196 +55,67 @@ function moveMagneticButton(event: ReactMouseEvent<HTMLAnchorElement>) {
 
   target.style.setProperty("--mx", `${event.clientX - rect.left}px`);
   target.style.setProperty("--my", `${event.clientY - rect.top}px`);
-  target.style.transform = `translate3d(${x * 0.08}px, ${y * 0.18}px, 0)`;
+  target.style.transform = `translate3d(${x * 0.15}px, ${y * 0.3}px, 0)`;
 }
 
 function resetMagneticButton(event: ReactMouseEvent<HTMLAnchorElement>) {
   event.currentTarget.style.transform = "translate3d(0, 0, 0)";
 }
 
-function CountUpStat({ stat }: { stat: ProofStat }) {
-  const ref = useRef<HTMLElement | null>(null);
-  const isInView = useInView(ref, { once: true, amount: 0.6 });
-  const count = useMotionValue(0);
-  const spring = useSpring(count, { stiffness: 120, damping: 22, mass: 0.8 });
-  const [label, setLabel] = useState(`${stat.prefix ?? ""}0${stat.suffix}`);
-
-  useEffect(() => {
-    if (!isInView) return;
-    const controls = animate(count, stat.target, {
-      duration: 1.45,
-      ease: [0.22, 1, 0.36, 1]
-    });
-
-    return () => controls.stop();
-  }, [count, isInView, stat.target]);
-
-  useMotionValueEvent(spring, "change", (latest) => {
-    setLabel(`${stat.prefix ?? ""}${Math.round(latest)}${stat.suffix}`);
-  });
-
-  return (
-    <article className="framer-stat-card reveal" key={stat.label}>
-      <strong ref={ref}>{label}</strong>
-      <span>{stat.label}</span>
-    </article>
-  );
-}
-
-function ProjectCard({
-  project,
-  onMagneticMove,
-  onMagneticLeave
-}: {
-  project: Project;
-  onMagneticMove: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
-  onMagneticLeave: (event: ReactMouseEvent<HTMLAnchorElement>) => void;
-}) {
-  const tiltX = useMotionValue(0);
-  const tiltY = useMotionValue(0);
-  const imageX = useTransform(tiltY, [-9, 9], [-10, 10]);
-  const imageY = useTransform(tiltX, [-8, 8], [8, -8]);
-  const sheenX = useMotionValue(50);
-  const rotateX = useSpring(tiltX, { stiffness: 180, damping: 18, mass: 0.6 });
-  const rotateY = useSpring(tiltY, { stiffness: 180, damping: 18, mass: 0.6 });
-  const shine = useSpring(sheenX, { stiffness: 110, damping: 18, mass: 0.4 });
-  const shinePosition = useTransform(shine, (value) => `${value}%`);
-
-  function handleMouseMove(event: ReactMouseEvent<HTMLElement>) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const percentX = (event.clientX - rect.left) / rect.width;
-    const percentY = (event.clientY - rect.top) / rect.height;
-    const deltaX = percentX - 0.5;
-    const deltaY = percentY - 0.5;
-
-    tiltX.set(deltaY * -9);
-    tiltY.set(deltaX * 12);
-    sheenX.set(percentX * 100);
-  }
-
-  function handleMouseLeave() {
-    tiltX.set(0);
-    tiltY.set(0);
-    sheenX.set(50);
-  }
-
-  return (
-    <motion.article
-      className="project-framer-card reveal project-tilt-card"
-      key={project.title}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={
-        {
-          rotateX,
-          rotateY,
-          "--sheen-x": shinePosition
-        } as CSSProperties
-      }
-    >
-      <motion.div className="project-image-wrap" aria-hidden="true" style={{ x: imageX, y: imageY }}>
-        <Image src={project.image} alt="" fill sizes="(max-width: 760px) 90vw, 40vw" />
-      </motion.div>
-      <div className="project-copy-framer">
-        <span className="project-index">{project.index}</span>
-        <h3>{project.title}</h3>
-        <p className="project-meta">{project.location}. {project.year}</p>
-        <a className="project-read-more" href="#contact">
-          READ MORE
-        </a>
-      </div>
-    </motion.article>
-  );
-}
-
-const serviceImages = [
-  "/assets/hero-crane-sunset.png",
-  "/assets/riverside-business-centre.png",
-  "/assets/gateway-industrial-park.png",
-  "/assets/oakwood-residential.png"
-];
-
-function ServiceCard({
-  service,
-  index
-}: {
-  service: Service;
-  index: number;
-}) {
-  return (
-    <article className="framer-service-card reveal">
-      <h3>{service.title}</h3>
-      <div className="framer-service-image">
-        <Image src={serviceImages[index % serviceImages.length]} alt={service.title} fill sizes="(max-width: 760px) 100vw, 45vw" />
-      </div>
-      <p>{service.body}</p>
-    </article>
-  );
-}
-
 export default function BuildingsPage({ content }: BuildingsPageProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [activeService, setActiveService] = useState<number | null>(null);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [heroRippleActive, setHeroRippleActive] = useState(false);
-  const tickerRef = useRef<HTMLElement | null>(null);
+  const [heroReady, setHeroReady] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
+  const ctaRef = useRef<HTMLAnchorElement>(null);
 
   const tickerItems = useMemo(
-    () => [...content.tickerStats, ...content.tickerStats],
+    () => [...content.tickerStats, ...content.tickerStats, ...content.tickerStats],
     [content.tickerStats]
   );
-
-
-  useEffect(() => {
-    const updateHeader = () => setIsScrolled(window.scrollY > 36);
-    updateHeader();
-    window.addEventListener("scroll", updateHeader, { passive: true });
-    return () => window.removeEventListener("scroll", updateHeader);
-  }, []);
-
-  useEffect(() => {
-    if (!tickerRef.current) return;
-
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let lastY = window.scrollY;
-    let lastTime = performance.now();
-
-    const updateTickerMomentum = () => {
-      const now = performance.now();
-      const deltaY = window.scrollY - lastY;
-      const deltaTime = Math.max(16, now - lastTime);
-      const velocity = Math.min(1.8, Math.abs(deltaY / deltaTime) * 12);
-      const skew = Math.max(-10, Math.min(10, deltaY * -0.12));
-
-      tickerRef.current?.style.setProperty("--ticker-skew", `${skew.toFixed(2)}deg`);
-      tickerRef.current?.style.setProperty(
-        "--ticker-duration",
-        `${Math.max(15, 24 - velocity * 5).toFixed(2)}s`
-      );
-
-      lastY = window.scrollY;
-      lastTime = now;
-
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        tickerRef.current?.style.setProperty("--ticker-skew", "0deg");
-        tickerRef.current?.style.setProperty("--ticker-duration", "24s");
-      }, 150);
-    };
-
-    updateTickerMomentum();
-    window.addEventListener("scroll", updateTickerMomentum, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", updateTickerMomentum);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, []);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
+      // Reveal timeline (waits for loader)
+      const revealTl = gsap.timeline({ paused: true });
+
+      revealTl
+        .fromTo(
+          ".hero-letter",
+          { yPercent: 115, opacity: 0 },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 0.74,
+            ease: "power4.out",
+            stagger: 0.018,
+          }
+        )
+        .fromTo(
+          ".hero-support",
+          { opacity: 0, y: 26 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power3.out",
+            stagger: 0.14,
+          },
+          "-=0.4"
+        )
+        .fromTo(
+          ".scroll-indicator",
+          { opacity: 0 },
+          { opacity: 1, duration: 0.5 },
+          "-=0.2"
+        );
+
+      if (heroReady) {
+        setTimeout(() => revealTl.play(), 800);
+      }
+
       gsap.utils.toArray<HTMLElement>(".reveal").forEach((element) => {
         gsap.fromTo(
           element,
@@ -250,10 +127,62 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
             ease: "power3.out",
             scrollTrigger: {
               trigger: element,
-              start: "top 86%"
-            }
+              start: "top 86%",
+            },
           }
         );
+      });
+
+      // Cinematic Marquee Scroll-Coupling
+      const tickerTrack = document.querySelector(".ticker-track");
+      if (tickerTrack) {
+        let direction = 1;
+        ScrollTrigger.create({
+          trigger: document.body,
+          start: "top top",
+          end: "bottom bottom",
+          onUpdate: (self) => {
+            if (self.direction !== direction) {
+              direction = self.direction;
+              gsap.to(tickerTrack, {
+                animationDirection: direction === 1 ? "normal" : "reverse",
+                duration: 0.5,
+              });
+            }
+            gsap.to(tickerTrack, {
+              animationDuration: `${24 - Math.abs(self.getVelocity()) * 0.005}s`,
+              duration: 0.2,
+              overwrite: "auto",
+            });
+            gsap.to(tickerTrack, {
+              animationDuration: "24s",
+              duration: 1,
+              delay: 0.2,
+              overwrite: "auto",
+            });
+          },
+        });
+      }
+
+      gsap.utils.toArray<HTMLElement>("[data-count]").forEach((counter) => {
+        const target = Number(counter.dataset.target ?? "0");
+        const prefix = counter.dataset.prefix ?? "";
+        const suffix = counter.dataset.suffix ?? "";
+        const value = { current: 0 };
+
+        gsap.to(value, {
+          current: target,
+          duration: 1.2,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: counter,
+            start: "top 88%",
+            once: true,
+          },
+          onUpdate: () => {
+            counter.textContent = `${prefix}${Math.round(value.current)}${suffix}`;
+          },
+        });
       });
 
       gsap.utils.toArray<HTMLElement>(".manifesto-line").forEach((line) => {
@@ -264,8 +193,8 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
             trigger: line,
             start: "top 78%",
             end: "bottom 52%",
-            scrub: true
-          }
+            scrub: true,
+          },
         });
       });
 
@@ -279,14 +208,47 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
             ease: "power3.out",
             scrollTrigger: {
               trigger: card,
-              start: "top 82%"
-            }
+              start: "top 82%",
+            },
           }
         );
       });
     });
 
     return () => ctx.revert();
+  }, [heroReady]);
+
+  // Handle global mouse move for gradient text and CTA proximity
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (heroRef.current) {
+        const x = (e.clientX / window.innerWidth) * 100;
+        const y = (e.clientY / window.innerHeight) * 100;
+        heroRef.current.style.setProperty("--mouse-x", `${x}%`);
+        heroRef.current.style.setProperty("--mouse-y", `${y}%`);
+      }
+
+      if (ctaRef.current) {
+        const rect = ctaRef.current.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const distanceX = e.clientX - centerX;
+        const distanceY = e.clientY - centerY;
+        const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+        if (distance < 150 && distance > rect.width / 2) {
+          const pull = 1 - distance / 150;
+          const pullX = distanceX * 0.1 * pull;
+          const pullY = distanceY * 0.1 * pull;
+          ctaRef.current.style.transform = `translate3d(${pullX}px, ${pullY}px, 0)`;
+        } else if (distance >= 150) {
+          ctaRef.current.style.transform = "translate3d(0, 0, 0)";
+        }
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    return () => window.removeEventListener("pointermove", handlePointerMove);
   }, []);
 
   function showPreviousTestimonial() {
@@ -301,205 +263,174 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
     );
   }
 
-  function handleHeroActionLeave(event: ReactMouseEvent<HTMLAnchorElement>) {
-    setHeroRippleActive(false);
-    resetMagneticButton(event);
-  }
-
   const activeQuote = content.testimonials[activeTestimonial];
 
   return (
     <main className="buildings-shell">
-      {/* ── Framer-style horizontal navbar ── */}
-      <motion.header
-        className={`framer-nav ${isScrolled ? "is-scrolled" : ""}`}
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <a className="framer-brand" href="#top" aria-label="Buildings home">
-          <span className="framer-brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 28 28" fill="none">
-              <rect x="2" y="8" width="10" height="18" rx="2" fill="currentColor" />
-              <rect x="14" y="2" width="12" height="24" rx="2" fill="currentColor" opacity="0.6" />
-            </svg>
-          </span>
-          <span className="framer-brand-text">Buildings</span>
-        </a>
+      <HeroLoader isReady={heroReady} />
 
-        <nav className="framer-nav-links" aria-label="Primary navigation">
-          {content.navigation
-            .filter((item) => item.label !== "Contact us")
-            .map((item) => (
-              <a key={item.href} href={item.href} className="framer-nav-link">
-                {item.label}
-              </a>
-            ))}
-        </nav>
-
-        <div className="framer-nav-actions">
-          <a href="#projects" className="framer-nav-btn framer-nav-btn--outline">
-            Our Work
-          </a>
-          <a href="#contact" className="framer-nav-btn framer-nav-btn--solid">
-            Contact Us
-          </a>
-        </div>
-
-        {/* Mobile hamburger */}
-        <motion.button
-          className="hamburger"
-          type="button"
-          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((value) => !value)}
-        >
-          <svg viewBox="0 0 32 32" aria-hidden="true">
-            <motion.line
-              x1="7" y1="10" x2="25" y2="10"
-              animate={menuOpen ? { x1: 9, y1: 9, x2: 23, y2: 23 } : { x1: 7, y1: 10, x2: 25, y2: 10 }}
-              transition={{ type: "spring", stiffness: 260, damping: 22 }}
-            />
-            <motion.line
-              x1="7" y1="16" x2="25" y2="16"
-              animate={menuOpen ? { opacity: 0.3, scaleX: 0.2 } : { opacity: 1, scaleX: 1 }}
-              transition={{ type: "spring", stiffness: 260, damping: 22 }}
-              style={{ transformOrigin: "50% 50%" }}
-            />
-            <motion.line
-              x1="7" y1="22" x2="25" y2="22"
-              animate={menuOpen ? { x1: 9, y1: 23, x2: 23, y2: 9 } : { x1: 7, y1: 22, x2: 25, y2: 22 }}
-              transition={{ type: "spring", stiffness: 260, damping: 22 }}
-            />
-          </svg>
-        </motion.button>
-      </motion.header>
-
-      <AnimatePresence>
-        {menuOpen ? (
-          <motion.nav
-            className="menu-panel"
-            aria-label="Primary navigation"
-            initial={{ opacity: 0, y: -18 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -18 }}
-            transition={{ duration: 0.24, ease: "easeOut" }}
-          >
-            {content.navigation.map((item) => (
-              <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
-                {item.label}
-                <ChevronRight size={18} strokeWidth={1.7} />
-              </a>
-            ))}
-          </motion.nav>
-        ) : null}
-      </AnimatePresence>
-
-      <AnimatedHero
-        backgroundImageUrl="/assets/hero-crane-sunset.png"
-        title={content.hero.title}
-        description={content.hero.body}
-        ctaButton={{
-          text: content.hero.cta,
-          href: "#contact",
-          icon: <ArrowUpRight size={18} strokeWidth={1.9} />,
-          onMouseMove: moveMagneticButton,
-          onMouseEnter: () => setHeroRippleActive(true),
-          onMouseLeave: handleHeroActionLeave
-        }}
-        rippleActive={heroRippleActive}
-      />
-
-      <section className="logo-ticker" aria-label="Our Partners">
-        <div className="logo-ticker-header">
-          <p>100+ projects, 100% commitment.</p>
-        </div>
-        <div className="logo-ticker-track-container">
-          <div className="logo-ticker-track">
-            {/* We duplicate the logos array to ensure a seamless infinite loop */}
-            {[...Array(2)].map((_, i) => (
-              <Fragment key={i}>
-                <LogoGretta className="client-logo" />
-                <LogoEnergyMax className="client-logo" />
-                <LogoCareer className="client-logo" />
-                <LogoAllReno className="client-logo" />
-                <LogoChema className="client-logo" />
-                <LogoInsure className="client-logo" />
-              </Fragment>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="section framer-projects-section" id="projects">
-        <div className="container">
-          <div className="framer-projects-header reveal">
-            <h2>Projects built with<br/>care and precision.</h2>
-            <a className="framer-orange-pill" href="#projects">
-              VIEW ALL PROJECTS
+      <section className="hero" id="top" ref={heroRef}>
+        <CinematicHeroCanvas onReady={() => setHeroReady(true)} />
+        <div className="hero-vignette" aria-hidden="true" />
+        <div className="container hero-content">
+          <h1 className="hero-headline" aria-label={content.hero.title}>
+            {splitHeadline(content.hero.title)}
+          </h1>
+          <div className="hero-lower">
+            <p className="hero-support">{content.hero.body}</p>
+            <a
+              ref={ctaRef}
+              className="hero-cta-magnetic hero-support"
+              href="/contact"
+              onMouseMove={moveMagneticButton}
+              onMouseLeave={resetMagneticButton}
+            >
+              <span>{content.hero.cta}</span>
+              <div className="cta-arrow-wrapper">
+                <ArrowUpRight size={18} strokeWidth={1.9} className="cta-arrow-main" />
+                <ArrowUpRight size={18} strokeWidth={1.9} className="cta-arrow-hover" />
+              </div>
             </a>
           </div>
+          <ScrollIndicator />
         </div>
-        <div className="framer-projects-track-wrapper">
-          <div className="framer-projects-track">
+      </section>
+
+      <section className="cinematic-marquee" aria-label="Company stats">
+        <div className="ticker-track">
+          {tickerItems.map((item, index) => (
+            <div className="ticker-item" key={`${item.value}-${item.label}-${index}`}>
+              <strong>{item.value}</strong>
+              <span>{item.label}</span>
+              <span className="ticker-separator">//</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="section projects-section" id="projects">
+        <div className="container">
+          <div className="section-heading reveal">
+            <h2>Projects built with care and precision.</h2>
+            <Link className="text-link" href="/portfolio">
+              View all projects
+              <ArrowRight size={18} />
+            </Link>
+          </div>
+          <div className="project-stack">
             {content.projects.map((project) => (
-              <ProjectCard
-                key={project.title}
-                project={project}
-                onMagneticMove={moveMagneticButton}
-                onMagneticLeave={resetMagneticButton}
-              />
+              <article className="project-card reveal" key={project.title}>
+                <span className="project-index">{project.index}</span>
+                <div className="project-image-wrap" aria-hidden="true">
+                  <Image
+                    src={project.image}
+                    alt=""
+                    fill
+                    sizes="(max-width: 760px) 100vw, 42vw"
+                  />
+                </div>
+                <div className="project-copy">
+                  <p>{project.category}</p>
+                  <h3>{project.title}</h3>
+                  <div>
+                    <span>{project.location}</span>
+                    <span>{project.year}</span>
+                  </div>
+                  <Link href={`/portfolio/${project.slug}`}>
+                    Read more
+                    <ArrowUpRight size={17} />
+                  </Link>
+                </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="section framer-about-section" id="about">
-        <div className="container">
-          <div className="framer-stats-container reveal">
-            <h3 className="framer-stats-title">DID YOU KNOW?</h3>
-            <div className="framer-stats-grid">
-              {content.proofStats.map((stat, i) => (
-                <div className="framer-stat-item" key={stat.label}>
-                  <CountUpStat stat={stat} />
-                </div>
-              ))}
-            </div>
+      <section className="section proof-section blueprint-grid-dark" aria-labelledby="proof-title">
+        <div className="container proof-grid">
+          <div className="proof-title reveal">
+            <h2 id="proof-title">Did you know?</h2>
+            <p>
+              Three practical signals behind a construction partner built for
+              demanding commercial, industrial, and residential work.
+            </p>
           </div>
-
-          <div className="framer-strengths-layout reveal">
-            <div className="framer-strengths-title">
-              <h2>Built on quality,<br/>trust, and safety.</h2>
-            </div>
-            <div className="framer-strengths-list">
-              {content.strengths.map((strength) => (
-                <div className="framer-strength-item" key={strength.title}>
-                  <h3>{strength.title}</h3>
-                  <div className="framer-strength-points">
-                    {strength.points.map((point) => (
-                      <p key={point}>{point}</p>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="proof-cards">
+            {content.proofStats.map((stat) => (
+              <article className="proof-card reveal" key={stat.label}>
+                <strong
+                  data-count
+                  data-target={stat.target}
+                  data-prefix={stat.prefix ?? ""}
+                  data-suffix={stat.suffix}
+                >
+                  {stat.prefix ?? ""}
+                  0{stat.suffix}
+                </strong>
+                <span>{stat.label}</span>
+              </article>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="section framer-services-section" id="services">
-        <div className="container">
-          <div className="framer-services-header reveal">
-            <h2>Services for every<br/>stage of your build.</h2>
-            <p>From planning to completion, we handle<br/>every detail of your project.</p>
+      <section className="section strengths-section" id="about">
+        <div className="container strengths-layout">
+          <div className="sticky-title reveal">
+            <h2>Built on quality, trust, and safety.</h2>
+            <p>
+              A focused operating model for work that needs craft, clarity, and
+              accountable site leadership.
+            </p>
           </div>
-          <div className="framer-services-grid">
+          <div className="strength-card-deck">
+            {content.strengths.map((strength, index) => (
+              <article
+                className="strength-card reveal"
+                key={strength.title}
+                style={{ "--card-offset": `${index * 28}px` } as CSSProperties}
+              >
+                <span>{`0${index + 1}`}</span>
+                <h3>{strength.title}</h3>
+                <ul>
+                  {strength.points.map((point) => (
+                    <li key={point}>
+                      <Check size={17} strokeWidth={1.8} />
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="section services-section" id="services">
+        <div className="container">
+          <div className="section-heading reveal">
+            <h2>Services for every stage of your build.</h2>
+            <Link className="text-link" href="/contact">
+              Get a quote
+              <ArrowRight size={18} />
+            </Link>
+          </div>
+          <div className="services-grid">
             {content.services.map((service, index) => (
-              <ServiceCard
+              <article
+                className="service-card reveal"
                 key={service.title}
-                service={service}
-                index={index}
-              />
+                onMouseEnter={() => setActiveService(index)}
+                onMouseLeave={() => setActiveService(null)}
+              >
+                <div className="service-mesh" aria-hidden="true">
+                  <ServiceWireframe active={activeService === index} />
+                </div>
+                <span>{service.number}</span>
+                <h3>{service.title}</h3>
+                <p>{service.body}</p>
+              </article>
             ))}
           </div>
         </div>
@@ -524,10 +455,18 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
             <div className="panel-heading">
               <h2>Testimonials</h2>
               <div className="carousel-controls">
-                <button type="button" aria-label="Previous testimonial" onClick={showPreviousTestimonial}>
+                <button
+                  type="button"
+                  aria-label="Previous testimonial"
+                  onClick={showPreviousTestimonial}
+                >
                   <ArrowLeft size={18} />
                 </button>
-                <button type="button" aria-label="Next testimonial" onClick={showNextTestimonial}>
+                <button
+                  type="button"
+                  aria-label="Next testimonial"
+                  onClick={showNextTestimonial}
+                >
                   <ArrowRight size={18} />
                 </button>
               </div>
@@ -558,13 +497,18 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
           <div className="blog-panel reveal">
             <div className="panel-heading">
               <h2>From the blog</h2>
-              <a href="#contact">View all blog</a>
+              <a href="/portfolio">View all blog</a>
             </div>
             <div className="blog-grid">
               {content.articles.map((article) => (
                 <article className="blog-card" key={article.title}>
                   <div className="blog-image">
-                    <Image src={article.image} alt="" fill sizes="(max-width: 760px) 100vw, 28vw" />
+                    <Image
+                      src={article.image}
+                      alt=""
+                      fill
+                      sizes="(max-width: 760px) 100vw, 28vw"
+                    />
                   </div>
                   <div>
                     <p>
@@ -589,7 +533,7 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
           </div>
           <a
             className="magnetic-button"
-            href={`mailto:${content.footer.contact.email}`}
+            href="/contact"
             onMouseMove={moveMagneticButton}
             onMouseLeave={resetMagneticButton}
           >
@@ -598,8 +542,6 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
           </a>
         </div>
       </section>
-
-      <CinematicFooter content={content} />
     </main>
   );
 }

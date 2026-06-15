@@ -1,98 +1,85 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
-import Link from "next/link";
-import type { LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React, { useEffect, useState } from "react"
+import { motion } from "framer-motion"
+import Link from "next/link"
+import { LucideIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface NavItem {
-  name: string;
-  url: string;
-  icon: LucideIcon;
+  name: string
+  url: string
+  icon: LucideIcon
 }
 
 interface NavBarProps {
-  items: NavItem[];
-  className?: string;
-  isScrolled?: boolean;
+  items: NavItem[]
+  className?: string
 }
 
-function MagneticNavLink({
-  item,
-  isActive,
-  onSelect
-}: {
-  item: NavItem;
-  isActive: boolean;
-  onSelect: (name: string) => void;
-}) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 150, damping: 15, mass: 0.2 });
-  const springY = useSpring(y, { stiffness: 150, damping: 15, mass: 0.2 });
+export function NavBar({ items, className }: NavBarProps) {
+  const [activeTab, setActiveTab] = useState(items[0].name)
+  const [isMobile, setIsMobile] = useState(false)
 
-  function handlePointerMove(event: React.MouseEvent<HTMLAnchorElement>) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const offsetX = event.clientX - rect.left - rect.width / 2;
-    const offsetY = event.clientY - rect.top - rect.height / 2;
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
 
-    x.set(offsetX * 0.12);
-    y.set(offsetY * 0.18);
-  }
-
-  function resetPointer() {
-    x.set(0);
-    y.set(0);
-  }
+    handleResize()
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
 
   return (
-    <Link
-      href={item.url}
-      onClick={() => onSelect(item.name)}
-      onMouseMove={handlePointerMove}
-      onMouseLeave={resetPointer}
-      className={cn("floating-nav-link", isActive && "is-active")}
+    <div
+      className={cn(
+        "fixed bottom-0 sm:top-0 left-1/2 -translate-x-1/2 z-50 mb-6 sm:pt-6",
+        className,
+      )}
     >
-      {isActive ? (
-        <motion.span
-          layoutId="nav-active-pill"
-          className="floating-nav-active-bg"
-          transition={{ type: "spring", stiffness: 240, damping: 24 }}
-        />
-      ) : null}
-      <motion.span className="floating-nav-link-copy" style={{ x: springX, y: springY }}>
-        {item.name}
-      </motion.span>
-    </Link>
-  );
-}
-
-export function NavBar({ items, className, isScrolled = false }: NavBarProps) {
-  const [activeTab, setActiveTab] = useState(items[0]?.name ?? "");
-
-  return (
-    <motion.nav
-      className={cn("floating-nav", isScrolled && "is-scrolled", className)}
-      initial={{ opacity: 0, scale: 0.92, y: -18 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.72, ease: [0.22, 1, 0.36, 1] }}
-      aria-label="Section navigation"
-    >
-      <div className="floating-nav-shell">
+      <div className="flex items-center gap-3 bg-background/5 border border-border backdrop-blur-lg py-1 px-1 rounded-full shadow-lg">
         {items.map((item) => {
-          const isActive = activeTab === item.name;
+          const Icon = item.icon
+          const isActive = activeTab === item.name
 
           return (
-            <MagneticNavLink
+            <Link
               key={item.name}
-              item={item}
-              isActive={isActive}
-              onSelect={setActiveTab}
-            />
-          );
+              href={item.url}
+              onClick={() => setActiveTab(item.name)}
+              className={cn(
+                "relative cursor-pointer text-sm font-semibold px-6 py-2 rounded-full transition-colors",
+                "text-foreground/80 hover:text-primary",
+                isActive && "bg-muted text-primary",
+              )}
+            >
+              <span className="hidden md:inline">{item.name}</span>
+              <span className="md:hidden">
+                <Icon size={18} strokeWidth={2.5} />
+              </span>
+              {isActive && (
+                <motion.div
+                  layoutId="lamp"
+                  className="absolute inset-0 w-full bg-primary/5 rounded-full -z-10"
+                  initial={false}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30,
+                  }}
+                >
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-t-full">
+                    <div className="absolute w-12 h-6 bg-primary/20 rounded-full blur-md -top-2 -left-2" />
+                    <div className="absolute w-8 h-6 bg-primary/20 rounded-full blur-md -top-1" />
+                    <div className="absolute w-4 h-4 bg-primary/20 rounded-full blur-sm top-0 left-2" />
+                  </div>
+                </motion.div>
+              )}
+            </Link>
+          )
         })}
       </div>
-    </motion.nav>
-  );
+    </div>
+  )
 }
