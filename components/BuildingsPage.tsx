@@ -2,12 +2,14 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import Link from "next/link";
 import {
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
   useEffect,
   useMemo,
-  useState
+  useRef,
+  useState,
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
@@ -17,14 +19,16 @@ import {
   ArrowRight,
   ArrowUpRight,
   Check,
-  ChevronRight,
-  X
 } from "lucide-react";
 import type { HomeContent } from "@/lib/content";
 
+import CinematicHeroCanvas from "./CinematicHeroCanvas";
+import HeroLoader from "./HeroLoader";
+import ScrollIndicator from "./ScrollIndicator";
+
 const ServiceWireframe = dynamic(() => import("./ServiceWireframe"), {
   ssr: false,
-  loading: () => <div className="wireframe-loading" />
+  loading: () => <div className="wireframe-loading" />,
 });
 
 type BuildingsPageProps = {
@@ -51,7 +55,7 @@ function moveMagneticButton(event: ReactMouseEvent<HTMLAnchorElement>) {
 
   target.style.setProperty("--mx", `${event.clientX - rect.left}px`);
   target.style.setProperty("--my", `${event.clientY - rect.top}px`);
-  target.style.transform = `translate3d(${x * 0.08}px, ${y * 0.18}px, 0)`;
+  target.style.transform = `translate3d(${x * 0.15}px, ${y * 0.3}px, 0)`;
 }
 
 function resetMagneticButton(event: ReactMouseEvent<HTMLAnchorElement>) {
@@ -59,10 +63,11 @@ function resetMagneticButton(event: ReactMouseEvent<HTMLAnchorElement>) {
 }
 
 export default function BuildingsPage({ content }: BuildingsPageProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const [activeService, setActiveService] = useState<number | null>(null);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [heroReady, setHeroReady] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
+  const ctaRef = useRef<HTMLAnchorElement>(null);
 
   const tickerItems = useMemo(
     () => [...content.tickerStats, ...content.tickerStats, ...content.tickerStats],
@@ -70,41 +75,46 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
   );
 
   useEffect(() => {
-    const updateHeader = () => setIsScrolled(window.scrollY > 36);
-    updateHeader();
-    window.addEventListener("scroll", updateHeader, { passive: true });
-    return () => window.removeEventListener("scroll", updateHeader);
-  }, []);
-
-  useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        ".hero-letter",
-        { yPercent: 115, opacity: 0 },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 0.74,
-          ease: "power4.out",
-          stagger: 0.018,
-          delay: 0.2
-        }
-      );
+      // Reveal timeline (waits for loader)
+      const revealTl = gsap.timeline({ paused: true });
 
-      gsap.fromTo(
-        ".hero-support",
-        { opacity: 0, y: 26 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power3.out",
-          stagger: 0.14,
-          delay: 0.58
-        }
-      );
+      revealTl
+        .fromTo(
+          ".hero-letter",
+          { yPercent: 115, opacity: 0 },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 0.74,
+            ease: "power4.out",
+            stagger: 0.018,
+          }
+        )
+        .fromTo(
+          ".hero-support",
+          { opacity: 0, y: 26 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            ease: "power3.out",
+            stagger: 0.14,
+          },
+          "-=0.4"
+        )
+        .fromTo(
+          ".scroll-indicator",
+          { opacity: 0 },
+          { opacity: 1, duration: 0.5 },
+          "-=0.2"
+        );
+
+      if (heroReady) {
+        setTimeout(() => revealTl.play(), 800);
+      }
 
       gsap.utils.toArray<HTMLElement>(".reveal").forEach((element) => {
         gsap.fromTo(
@@ -117,11 +127,42 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
             ease: "power3.out",
             scrollTrigger: {
               trigger: element,
-              start: "top 86%"
-            }
+              start: "top 86%",
+            },
           }
         );
       });
+
+      // Cinematic Marquee Scroll-Coupling
+      const tickerTrack = document.querySelector(".ticker-track");
+      if (tickerTrack) {
+        let direction = 1;
+        ScrollTrigger.create({
+          trigger: document.body,
+          start: "top top",
+          end: "bottom bottom",
+          onUpdate: (self) => {
+            if (self.direction !== direction) {
+              direction = self.direction;
+              gsap.to(tickerTrack, {
+                animationDirection: direction === 1 ? "normal" : "reverse",
+                duration: 0.5,
+              });
+            }
+            gsap.to(tickerTrack, {
+              animationDuration: `${24 - Math.abs(self.getVelocity()) * 0.005}s`,
+              duration: 0.2,
+              overwrite: "auto",
+            });
+            gsap.to(tickerTrack, {
+              animationDuration: "24s",
+              duration: 1,
+              delay: 0.2,
+              overwrite: "auto",
+            });
+          },
+        });
+      }
 
       gsap.utils.toArray<HTMLElement>("[data-count]").forEach((counter) => {
         const target = Number(counter.dataset.target ?? "0");
@@ -136,11 +177,11 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
           scrollTrigger: {
             trigger: counter,
             start: "top 88%",
-            once: true
+            once: true,
           },
           onUpdate: () => {
             counter.textContent = `${prefix}${Math.round(value.current)}${suffix}`;
-          }
+          },
         });
       });
 
@@ -152,8 +193,8 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
             trigger: line,
             start: "top 78%",
             end: "bottom 52%",
-            scrub: true
-          }
+            scrub: true,
+          },
         });
       });
 
@@ -167,14 +208,47 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
             ease: "power3.out",
             scrollTrigger: {
               trigger: card,
-              start: "top 82%"
-            }
+              start: "top 82%",
+            },
           }
         );
       });
     });
 
     return () => ctx.revert();
+  }, [heroReady]);
+
+  // Handle global mouse move for gradient text and CTA proximity
+  useEffect(() => {
+    const handlePointerMove = (e: PointerEvent) => {
+      if (heroRef.current) {
+        const x = (e.clientX / window.innerWidth) * 100;
+        const y = (e.clientY / window.innerHeight) * 100;
+        heroRef.current.style.setProperty("--mouse-x", `${x}%`);
+        heroRef.current.style.setProperty("--mouse-y", `${y}%`);
+      }
+
+      if (ctaRef.current) {
+        const rect = ctaRef.current.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const distanceX = e.clientX - centerX;
+        const distanceY = e.clientY - centerY;
+        const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+        if (distance < 150 && distance > rect.width / 2) {
+          const pull = 1 - distance / 150;
+          const pullX = distanceX * 0.1 * pull;
+          const pullY = distanceY * 0.1 * pull;
+          ctaRef.current.style.transform = `translate3d(${pullX}px, ${pullY}px, 0)`;
+        } else if (distance >= 150) {
+          ctaRef.current.style.transform = "translate3d(0, 0, 0)";
+        }
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    return () => window.removeEventListener("pointermove", handlePointerMove);
   }, []);
 
   function showPreviousTestimonial() {
@@ -193,79 +267,42 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
 
   return (
     <main className="buildings-shell">
-      <header className={`site-header ${isScrolled ? "is-scrolled" : ""}`}>
-        <a className="brand" href="#top" aria-label="Buildings home">
-          <span className="brand-symbol" aria-hidden="true">
-            <span />
-            <span />
-          </span>
-          <span className="brand-text">Buildings</span>
-        </a>
-        <button
-          className="hamburger"
-          type="button"
-          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((value) => !value)}
-        >
-          {menuOpen ? (
-            <X size={23} strokeWidth={1.8} />
-          ) : (
-            <>
-              <span />
-              <span />
-              <span />
-            </>
-          )}
-        </button>
-      </header>
+      <HeroLoader isReady={heroReady} />
 
-      <AnimatePresence>
-        {menuOpen ? (
-          <motion.nav
-            className="menu-panel"
-            aria-label="Primary navigation"
-            initial={{ opacity: 0, y: -18 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -18 }}
-            transition={{ duration: 0.24, ease: "easeOut" }}
-          >
-            {content.navigation.map((item) => (
-              <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
-                {item.label}
-                <ChevronRight size={18} strokeWidth={1.7} />
-              </a>
-            ))}
-          </motion.nav>
-        ) : null}
-      </AnimatePresence>
-
-      <section className="hero" id="top">
-        <div className="hero-photo" aria-hidden="true" />
+      <section className="hero" id="top" ref={heroRef}>
+        <CinematicHeroCanvas onReady={() => setHeroReady(true)} />
         <div className="hero-vignette" aria-hidden="true" />
         <div className="container hero-content">
-          <h1 aria-label={content.hero.title}>{splitHeadline(content.hero.title)}</h1>
+          <h1 className="hero-headline" aria-label={content.hero.title}>
+            {splitHeadline(content.hero.title)}
+          </h1>
           <div className="hero-lower">
             <p className="hero-support">{content.hero.body}</p>
             <a
-              className="magnetic-button hero-support"
-              href="#contact"
+              ref={ctaRef}
+              className="hero-cta-magnetic hero-support"
+              href="/contact"
               onMouseMove={moveMagneticButton}
               onMouseLeave={resetMagneticButton}
             >
-              {content.hero.cta}
-              <ArrowUpRight size={18} strokeWidth={1.9} />
+              <span>{content.hero.cta}</span>
+              <div className="cta-arrow-wrapper">
+                <ArrowUpRight size={18} strokeWidth={1.9} className="cta-arrow-main" />
+                <ArrowUpRight size={18} strokeWidth={1.9} className="cta-arrow-hover" />
+              </div>
             </a>
           </div>
+          <ScrollIndicator />
         </div>
       </section>
 
-      <section className="stat-ticker" aria-label="Company stats">
+      <section className="cinematic-marquee" aria-label="Company stats">
         <div className="ticker-track">
           {tickerItems.map((item, index) => (
             <div className="ticker-item" key={`${item.value}-${item.label}-${index}`}>
               <strong>{item.value}</strong>
               <span>{item.label}</span>
+              <span className="ticker-separator">//</span>
             </div>
           ))}
         </div>
@@ -275,10 +312,10 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
         <div className="container">
           <div className="section-heading reveal">
             <h2>Projects built with care and precision.</h2>
-            <a className="text-link" href="#blog">
+            <Link className="text-link" href="/portfolio">
               View all projects
               <ArrowRight size={18} />
-            </a>
+            </Link>
           </div>
           <div className="project-stack">
             {content.projects.map((project) => (
@@ -299,10 +336,10 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
                     <span>{project.location}</span>
                     <span>{project.year}</span>
                   </div>
-                  <a href="#contact">
+                  <Link href={`/portfolio/${project.slug}`}>
                     Read more
                     <ArrowUpRight size={17} />
-                  </a>
+                  </Link>
                 </div>
               </article>
             ))}
@@ -310,7 +347,7 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
         </div>
       </section>
 
-      <section className="section proof-section" aria-labelledby="proof-title">
+      <section className="section proof-section blueprint-grid-dark" aria-labelledby="proof-title">
         <div className="container proof-grid">
           <div className="proof-title reveal">
             <h2 id="proof-title">Did you know?</h2>
@@ -374,10 +411,10 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
         <div className="container">
           <div className="section-heading reveal">
             <h2>Services for every stage of your build.</h2>
-            <a className="text-link" href="#contact">
+            <Link className="text-link" href="/contact">
               Get a quote
               <ArrowRight size={18} />
-            </a>
+            </Link>
           </div>
           <div className="services-grid">
             {content.services.map((service, index) => (
@@ -418,10 +455,18 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
             <div className="panel-heading">
               <h2>Testimonials</h2>
               <div className="carousel-controls">
-                <button type="button" aria-label="Previous testimonial" onClick={showPreviousTestimonial}>
+                <button
+                  type="button"
+                  aria-label="Previous testimonial"
+                  onClick={showPreviousTestimonial}
+                >
                   <ArrowLeft size={18} />
                 </button>
-                <button type="button" aria-label="Next testimonial" onClick={showNextTestimonial}>
+                <button
+                  type="button"
+                  aria-label="Next testimonial"
+                  onClick={showNextTestimonial}
+                >
                   <ArrowRight size={18} />
                 </button>
               </div>
@@ -452,13 +497,18 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
           <div className="blog-panel reveal">
             <div className="panel-heading">
               <h2>From the blog</h2>
-              <a href="#contact">View all blog</a>
+              <a href="/portfolio">View all blog</a>
             </div>
             <div className="blog-grid">
               {content.articles.map((article) => (
                 <article className="blog-card" key={article.title}>
                   <div className="blog-image">
-                    <Image src={article.image} alt="" fill sizes="(max-width: 760px) 100vw, 28vw" />
+                    <Image
+                      src={article.image}
+                      alt=""
+                      fill
+                      sizes="(max-width: 760px) 100vw, 28vw"
+                    />
                   </div>
                   <div>
                     <p>
@@ -483,7 +533,7 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
           </div>
           <a
             className="magnetic-button"
-            href={`mailto:${content.footer.contact.email}`}
+            href="/contact"
             onMouseMove={moveMagneticButton}
             onMouseLeave={resetMagneticButton}
           >
@@ -492,58 +542,6 @@ export default function BuildingsPage({ content }: BuildingsPageProps) {
           </a>
         </div>
       </section>
-
-      <footer className="site-footer">
-        <div className="footer-skyline" aria-hidden="true">
-          {Array.from({ length: 18 }).map((_, index) => (
-            <span key={index} style={{ "--h": `${42 + ((index * 31) % 92)}px` } as CSSProperties} />
-          ))}
-        </div>
-        <div className="container footer-grid">
-          <div>
-            <a className="brand footer-brand" href="#top" aria-label="Buildings home">
-              <span className="brand-symbol" aria-hidden="true">
-                <span />
-                <span />
-              </span>
-              <span className="brand-text">Buildings</span>
-            </a>
-            <p>{content.footer.summary}</p>
-          </div>
-          <div>
-            <h3>Address</h3>
-            <p>{content.footer.address}</p>
-          </div>
-          <div>
-            <h3>Contact</h3>
-            <p>
-              {content.footer.contact.phone}
-              <br />
-              {content.footer.contact.email}
-            </p>
-          </div>
-          <div>
-            <h3>Navigation</h3>
-            {content.navigation.slice(0, 4).map((item) => (
-              <a key={item.href} href={item.href}>
-                {item.label}
-              </a>
-            ))}
-          </div>
-          <div>
-            <h3>Social</h3>
-            {content.footer.social.map((item) => (
-              <a key={item} href="#top">
-                {item}
-              </a>
-            ))}
-          </div>
-        </div>
-        <div className="container footer-legal">
-          <span>Created by dianadia © 2026</span>
-          <span>Built in Framer spirit, rebuilt in Next.js</span>
-        </div>
-      </footer>
     </main>
   );
 }
